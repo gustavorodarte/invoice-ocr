@@ -1,0 +1,46 @@
+version: "3.8"
+
+volumes:
+  postgres-data:
+  node-modules-cache:
+
+
+services:
+  app:
+    links:
+      - postgres
+    hostname: app
+    env_file: .docker.env
+    build:
+      context: .
+      target: development
+    command: npm start:dev
+    volumes:
+      - .:/home/node/app:Z
+      - node-modules-cache:/home/node/app/node_modules:Z
+    ports:
+      - 4040:4040
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16.3-alpine3.19
+    hostname: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:Z
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+
+  pgadmin4:
+    hostname: pgadmin4
+    image: dpage/pgadmin4
+    ports:
+      - 6003:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'gustavo@rodarte.dev'
+      PGADMIN_DEFAULT_PASSWORD: 'dev@1234'
+    depends_on:
+      - postgresz

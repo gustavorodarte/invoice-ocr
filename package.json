@@ -1,0 +1,19 @@
+{
+  "name": "paggo-ocr",
+  "version": "1.0.0",
+  "description": "take home case ocr ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Gustavo Rodarte",
+  "license": "ISC",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {
+    "@nestjs/cli": "^10.3.2"
+  }
+}
