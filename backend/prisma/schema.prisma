@@ -17,10 +17,10 @@ model User {
   id    Int     @id @default(autoincrement())
   email String  @unique
   name  String?
-  invocies Invoices[]
+  invocies Invoice[]
 }
 
-model Invoices {
+model Invoice {
   id        Int      @id @default(autoincrement())
   title     String
   content   Json?

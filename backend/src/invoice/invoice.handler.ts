@@ -1,31 +1,35 @@
-import { HttpStatus } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { Callback, Context, Handler, S3Event } from 'aws-lambda';
+import { Handler, S3Event } from 'aws-lambda';
 import { Invoiceodule } from './invoice.module';
-import { AppService } from './app.service';
+import { InvoiceService } from './invoice.service';
 import {
   TextractClient,
   DetectDocumentTextCommand,
 } from '@aws-sdk/client-textract';
 
-export const handler: Handler = async (
-  event: S3Event,
-  context: Context,
-  callback: Callback,
-) => {
+export const handler: Handler = async (event: S3Event) => {
   const appContext = await NestFactory.createApplicationContext(Invoiceodule);
-  const appService = appContext.get(AppService);
+  const invoiceService = appContext.get(InvoiceService);
 
   const textractClient = new TextractClient();
 
-  textractClient.send(
+  const { Blocks: blocks } = await textractClient.send(
     new DetectDocumentTextCommand({
-      Document: '',
+      Document: {
+        S3Object: {
+          Bucket: event.Records[0].s3.bucket.name,
+          Name: event.Records[0].s3.object.key,
+        },
+      },
     }),
   );
 
-  return {
-    body: appService.getHello(),
-    statusCode: HttpStatus.OK,
-  };
+  const textLines = blocks
+    .filter((block) => block.BlockType === 'LINE')
+    .map((block) => block.Text);
+
+  await invoiceService.createInvoice({
+    title: 'titulo',
+    content: textLines,
+  });
 };
