@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  postgres:
+    image: "public.ecr.aws/bitnami/postgresql:12.7.0"
+    ports:
+      - "5432:5432"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: root
+volumes:
+  postgres_data:
