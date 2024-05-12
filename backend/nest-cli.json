@@ -1,8 +1,59 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "lambdas/get-invoice/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "lambdas/get-invoice/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "lambdas/get-invoice",
+  "projects": {
+    "get-invoice": {
+      "type": "application",
+      "root": "lambdas/get-invoice",
+      "entryFile": "main",
+      "sourceRoot": "lambdas/get-invoice/src",
+      "compilerOptions": {
+        "tsConfigPath": "lambdas/get-invoice/tsconfig.app.json"
+      }
+    },
+    "invoice-ocr": {
+      "type": "application",
+      "root": "lambdas/invoice-ocr",
+      "entryFile": "main",
+      "sourceRoot": "lambdas/invoice-ocr/src",
+      "compilerOptions": {
+        "tsConfigPath": "lambdas/invoice-ocr/tsconfig.app.json"
+      }
+    },
+    "migration": {
+      "type": "application",
+      "root": "lambdas/migration",
+      "entryFile": "main",
+      "sourceRoot": "lambdas/migration/src",
+      "compilerOptions": {
+        "tsConfigPath": "lambdas/migration/tsconfig.app.json"
+      }
+    },
+    "invoice": {
+      "type": "library",
+      "root": "libs/invoice",
+      "entryFile": "index",
+      "sourceRoot": "libs/invoice/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/invoice/tsconfig.lib.json"
+      }
+    },
+    "prisma": {
+      "type": "library",
+      "root": "libs/prisma",
+      "entryFile": "index",
+      "sourceRoot": "libs/prisma/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/prisma/tsconfig.lib.json"
+      }
+    }
   }
 }

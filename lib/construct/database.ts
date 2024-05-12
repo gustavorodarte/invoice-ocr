@@ -21,6 +21,10 @@ export class Database extends Construct {
       engine,
       serverlessV2MaxCapacity: 1,
       serverlessV2MinCapacity: 0.5,
+      writer: rds.ClusterInstance.serverlessV2("Writer", {
+        enablePerformanceInsights: true,
+        caCertificate: rds.CaCertificate.RDS_CA_ECC384_G1,
+      }),
       vpc,
       vpcSubnets: vpc.selectSubnets({ subnets: vpc.isolatedSubnets.concat(vpc.privateSubnets) }),
       storageEncrypted: true,

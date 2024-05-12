@@ -4,15 +4,12 @@
   "description": "take home case ocr ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cdk": "cdk"
   },
   "author": "Gustavo Rodarte",
   "license": "ISC",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "dependencies": {
     "aws-cdk-lib": "2.141.0",
     "constructs": "^10.0.0",

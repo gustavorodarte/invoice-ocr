@@ -4,8 +4,7 @@ import * as s3 from "aws-cdk-lib/aws-s3"
 import * as iam from "aws-cdk-lib/aws-iam"
 import { DatabaseConnectionProps, PrismaFunction } from "./prisma-function";
 import { Construct } from "constructs";
-import { DockerImageCode, Function } from "aws-cdk-lib/aws-lambda";
-import { Platform } from "aws-cdk-lib/aws-ecr-assets";
+import { Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaIntegration, MethodLoggingLevel, RestApi } from "aws-cdk-lib/aws-apigateway"
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
 
@@ -28,37 +27,40 @@ export class Application extends Construct {
             vpc: props.vpc,
         });
 
-        new PrismaFunction(this, "InvoiceOcr", {
-            code: DockerImageCode.fromImageAsset("./backend", { platform: Platform.LINUX_AMD64 }),
+        const ocrLambdaFunction = new PrismaFunction(this, "InvoiceOcr", {
+            entry: "./backend/dist/invoice/invoice-ocr.handler.js",
             memorySize: 256,
+            runtime: Runtime.NODEJS_20_X,
             timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
+            depsLockFilePath: "./backend/yarn.lock",
         });
 
         const getInvoceLambdaFunction = new PrismaFunction(this, "GetInvoices", {
-            code: DockerImageCode.fromImageAsset("./backend", { platform: Platform.LINUX_AMD64 }),
+            entry: "./backend/dist/invoice/get-invoice.handler.js",
             memorySize: 256,
+            runtime: Runtime.NODEJS_20_X,
             timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
+            depsLockFilePath: "./backend/yarn.lock",
         });
 
-        const ocrLambdaFunction = new PrismaFunction(this, "MigrationRunner", {
-            code: DockerImageCode.fromImageAsset("./backend", {
-                cmd: ["migration-runner.handler"],
-                platform: Platform.LINUX_AMD64,
-            }),
+        const migrationRunner = new PrismaFunction(this, "MigrationRunner", {
+            entry: "./backend/dist/migration/migration-runner.handler.js",
             memorySize: 256,
-            timeout: cdk.Duration.minutes(1),
+            runtime: Runtime.NODEJS_20_X,
+            timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
+            depsLockFilePath: "./backend/yarn.lock",
         });
 
-        const bucket = new s3.Bucket(this, 'paggo-ocr', {
+        const bucket = new s3.Bucket(this, 'invoice-ocr', {
             accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
             encryption: s3.BucketEncryption.S3_MANAGED,
             publicReadAccess: true,
@@ -99,7 +101,7 @@ export class Application extends Construct {
 
         const invokeEventSource = new cdk.aws_lambda_event_sources.S3EventSource(bucket, {
             events: [s3.EventType.OBJECT_CREATED],
-          });
+        });
 
         ocrLambdaFunction.addEventSource(invokeEventSource)
 
@@ -114,6 +116,12 @@ export class Application extends Construct {
 
         restApi.root.addMethod("GET", new LambdaIntegration(getInvoceLambdaFunction, {}));
 
+        new cdk.CfnOutput(this, `OcrLambdaLambdaArn`, { value: ocrLambdaFunction.functionArn });
+        new cdk.CfnOutput(this, `MigrationRunnerLambdaArn`, { value: migrationRunner.functionArn });
+        new cdk.CfnOutput(this, `GetInvoiceLambdaArn`, { value: getInvoceLambdaFunction.functionArn });
+        
+    
+        this.migrationHandler = migrationRunner;;
         this.lambdaSecurityGroup = securityGroup;
     }
 }

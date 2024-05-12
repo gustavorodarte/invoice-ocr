@@ -12,14 +12,22 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "paths": {
+      "@app/invoice": [
+        "libs/invoice/src"
+      ],
+      "@app/invoice/*": [
+        "libs/invoice/src/*"
+      ],
+      "@app/prisma": [
+        "libs/prisma/src"
+      ],
+      "@app/prisma/*": [
+        "libs/prisma/src/*"
+      ]
+    }
   },
-    "exclude": [
-    "node_modules",
-    "cdk.out"
+  "include": [
+    "src/**/*"
   ]
 }
