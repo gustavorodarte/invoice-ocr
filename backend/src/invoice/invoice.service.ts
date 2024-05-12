@@ -19,4 +19,21 @@ export class InvoiceService {
       data,
     });
   }
+
+  async invoices(params: {
+    skip?: number;
+    take?: number;
+    cursor?: Prisma.InvoicesWhereUniqueInput;
+    where?: Prisma.InvoicesWhereInput;
+    orderBy?: Prisma.InvoicesOrderByWithRelationInput;
+  }): Promise<Invoices[]> {
+    const { skip, take, cursor, where, orderBy } = params;
+    return this.prisma.invoices.findMany({
+      skip,
+      take,
+      cursor,
+      where,
+      orderBy,
+    });
+  }
 }
