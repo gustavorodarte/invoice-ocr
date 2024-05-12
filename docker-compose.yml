@@ -20,6 +20,7 @@ services:
       - node-modules-cache:/home/node/app/node_modules:Z
     ports:
       - 4040:4040
+      - 3000:3000
     depends_on:
       - postgres
 
