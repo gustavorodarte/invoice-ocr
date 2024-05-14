@@ -4,9 +4,10 @@ import * as s3 from "aws-cdk-lib/aws-s3"
 import * as iam from "aws-cdk-lib/aws-iam"
 import { DatabaseConnectionProps, PrismaFunction } from "./prisma-function";
 import { Construct } from "constructs";
-import { Function, Runtime } from "aws-cdk-lib/aws-lambda";
+import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaIntegration, MethodLoggingLevel, RestApi } from "aws-cdk-lib/aws-apigateway"
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
+import { LogGroup } from "aws-cdk-lib/aws-logs";
 
 
 interface ApplicationProps {
@@ -28,42 +29,46 @@ export class Application extends Construct {
         });
 
         const ocrLambdaFunction = new PrismaFunction(this, "InvoiceOcr", {
-            entry: "./backend/dist/invoice/invoice-ocr.handler.js",
+            code: Code.fromAsset("backend/dist/lambdas/invoice-ocr"),
             memorySize: 256,
             runtime: Runtime.NODEJS_20_X,
             timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
-            depsLockFilePath: "./backend/yarn.lock",
+            handler: "main.handler",
         });
 
         const getInvoceLambdaFunction = new PrismaFunction(this, "GetInvoices", {
-            entry: "./backend/dist/invoice/get-invoice.handler.js",
+            code: Code.fromAsset("backend/dist/lambdas/get-invoice"),
             memorySize: 256,
             runtime: Runtime.NODEJS_20_X,
             timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
-            depsLockFilePath: "./backend/yarn.lock",
+            handler: "main.handler",
         });
 
         const migrationRunner = new PrismaFunction(this, "MigrationRunner", {
-            entry: "./backend/dist/migration/migration-runner.handler.js",
+            code: Code.fromAsset("backend/dist/lambdas/migration"),
             memorySize: 256,
             runtime: Runtime.NODEJS_20_X,
             timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
-            depsLockFilePath: "./backend/yarn.lock",
+            handler: "main.handler",
         });
 
         const bucket = new s3.Bucket(this, 'invoice-ocr', {
-            accessControl: s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
-            encryption: s3.BucketEncryption.S3_MANAGED,
             publicReadAccess: true,
+            blockPublicAccess: {
+                blockPublicAcls: true,
+                ignorePublicAcls: true,
+                restrictPublicBuckets: false,
+                blockPublicPolicy: false,
+            },
             cors: [
                 {
                     "allowedHeaders": [
@@ -83,34 +88,47 @@ export class Application extends Construct {
             ],
         });
 
-        bucket.addToResourcePolicy(new iam.PolicyStatement({
-            actions: ['*'],
-            principals: [new iam.AnyPrincipal()],
-            resources: [
-                bucket.bucketArn,
-                bucket.arnForObjects('*')
-            ],
-            conditions: {
-                'StringEquals':
-                {
-                    's3:DataAccessPointAccount': `${cdk.Aws.ACCOUNT_ID}`
-                }
-            }
-        }
-        ));
+        bucket.addToResourcePolicy(
+            new iam.PolicyStatement({
+                actions: ['s3:GetObject'],
+                effect: iam.Effect.ALLOW,
+                principals: [new iam.StarPrincipal()],
+                resources: [bucket.arnForObjects('*')],
+            })
+        )
+
 
         const invokeEventSource = new cdk.aws_lambda_event_sources.S3EventSource(bucket, {
             events: [s3.EventType.OBJECT_CREATED],
         });
 
-        ocrLambdaFunction.addEventSource(invokeEventSource)
+        ocrLambdaFunction.addEventSource(invokeEventSource);
+
+        // const logGroupName = "apigateway-invoice-lambda";
+        // const logRetention = new cdk.aws_logs.LogRetention(
+        //     scope,
+        //     "apiGwLogGroupConstruct",
+        //     {
+        //         logGroupName: logGroupName,
+        //         retention: cdk.aws_logs.RetentionDays.ONE_WEEK,
+        //         removalPolicy: cdk.RemovalPolicy.DESTROY,
+        //     }
+        // );
+        // const logGroup = cdk.aws_logs.LogGroup.fromLogGroupArn(
+        //     scope,
+        //     "apiGwLogGroup",
+        //     logRetention.logGroupArn
+        // );
 
         const restApi = new RestApi(this, "InvoicesRestApi", {
             deployOptions: {
                 stageName: "dev",
                 metricsEnabled: true,
-                loggingLevel: MethodLoggingLevel.INFO,
+                // loggingLevel: MethodLoggingLevel.INFO,
                 dataTraceEnabled: true,
+                // accessLogDestination: new cdk.aws_apigateway.LogGroupLogDestination(
+                //     logGroup
+                // ),
             },
         })
 
@@ -119,8 +137,8 @@ export class Application extends Construct {
         new cdk.CfnOutput(this, `OcrLambdaLambdaArn`, { value: ocrLambdaFunction.functionArn });
         new cdk.CfnOutput(this, `MigrationRunnerLambdaArn`, { value: migrationRunner.functionArn });
         new cdk.CfnOutput(this, `GetInvoiceLambdaArn`, { value: getInvoceLambdaFunction.functionArn });
-        
-    
+
+
         this.migrationHandler = migrationRunner;;
         this.lambdaSecurityGroup = securityGroup;
     }

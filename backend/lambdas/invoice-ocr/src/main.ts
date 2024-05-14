@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Handler, S3Event } from 'aws-lambda';
 import { InvoiceOcrModule } from './invoice-ocr.module';
-import { InvoiceService } from '../../../libs/invoice/src';
+import { InvoiceService } from '../../../layers/invoice/src';
 import {
   TextractClient,
   DetectDocumentTextCommand,

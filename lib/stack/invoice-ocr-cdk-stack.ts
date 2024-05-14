@@ -39,3 +39,6 @@ export class InvoiceOcrCdkStack extends cdk.Stack {
     trigger.node.addDependency(database.cluster);
   }
 }
+
+
+

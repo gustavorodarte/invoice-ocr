@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { InvoiceModule } from '../../../libs/invoice/src';
+import { InvoiceModule } from '../../../layers/invoice/src';
 
 @Module({
   imports: [InvoiceModule],

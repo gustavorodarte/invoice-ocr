@@ -14,16 +14,16 @@
     "skipLibCheck": true,
     "paths": {
       "@app/invoice": [
-        "libs/invoice/src"
+        "layers/invoice/src"
       ],
       "@app/invoice/*": [
-        "libs/invoice/src/*"
+        "layers/invoice/src/*"
       ],
       "@app/prisma": [
-        "libs/prisma/src"
+        "layers/prisma/src"
       ],
       "@app/prisma/*": [
-        "libs/prisma/src/*"
+        "layers/prisma/src/*"
       ]
     }
   },

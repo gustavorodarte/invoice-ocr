@@ -1,3 +1,4 @@
+import { Code, Function, FunctionProps, Runtime } from "aws-cdk-lib/aws-lambda";
 import * as lambdanode from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 
@@ -9,11 +10,12 @@ export interface DatabaseConnectionProps {
   password: string;
 }
 
-interface PrismaFunctionProps extends lambdanode.NodejsFunctionProps {
+interface PrismaFunctionProps extends FunctionProps {
   database: DatabaseConnectionProps;
+  code: Code,
 }
 
-export class PrismaFunction extends lambdanode.NodejsFunction {
+export class PrismaFunction extends Function {
   constructor(scope: Construct, id: string, props: PrismaFunctionProps) {
     super(scope, id, {
       ...props,
@@ -25,18 +27,7 @@ export class PrismaFunction extends lambdanode.NodejsFunction {
         DATABASE_USER: props.database.username,
         DATABASE_PASSWORD: props.database.password,
       },
-      bundling: {
-        nodeModules: ["prisma", "@prisma/client"].concat(props.bundling?.nodeModules ?? []),
-        commandHooks: {
-          beforeInstall: (i, o) => [
-            // Copy prisma directory to Lambda code asset
-            // the directory must be placed on the same directory as your Lambda code
-            `cp -r ${i}/prisma ${o}`,
-          ],
-          beforeBundling: (i, o) => [],
-          afterBundling: (i, o) => [],
-        },
-      },
+      code: props.code,
     });
   }
 }
