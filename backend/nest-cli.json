@@ -39,20 +39,20 @@
     },
     "invoice": {
       "type": "library",
-      "root": "libs/invoice",
+      "root": "layers/invoice",
       "entryFile": "index",
-      "sourceRoot": "libs/invoice/src",
+      "sourceRoot": "layers/invoice/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/invoice/tsconfig.lib.json"
+        "tsConfigPath": "layers/invoice/tsconfig.lib.json"
       }
     },
     "prisma": {
       "type": "library",
-      "root": "libs/prisma",
+      "root": "layers/prisma",
       "entryFile": "index",
-      "sourceRoot": "libs/prisma/src",
+      "sourceRoot": "layers/prisma/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/prisma/tsconfig.lib.json"
+        "tsConfigPath": "layers/prisma/tsconfig.lib.json"
       }
     }
   }

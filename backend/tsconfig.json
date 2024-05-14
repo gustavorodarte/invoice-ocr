@@ -24,10 +24,13 @@
       ],
       "@app/prisma/*": [
         "layers/prisma/src/*"
-      ]
+      ],
+      "/opt/prisma": ["layers/prisma/src"],
+      "/opt/invoice": ["layers/invoice/src"],
     }
   },
   "include": [
-    "src/**/*"
+    "lambdas/**/*",
+    "layers/**/*"
   ]
 }

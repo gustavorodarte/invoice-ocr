@@ -2,7 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Handler } from 'aws-lambda';
 import { GetInvoiceModule } from './get-invoice.module';
-import { InvoiceService } from '../../../layers/invoice/src';
+import { InvoiceService } from '/opt/invoice';
 
 export const handler: Handler = async () => {
   const appContext =
