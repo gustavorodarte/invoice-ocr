@@ -28,7 +28,7 @@ export const handler: Handler = async (event: S3Event) => {
   const textLines =
     blocks
       ?.filter((block) => block.BlockType === 'LINE')
-      .map((block) => block.Text) || {};
+      .map((block) => block.Text) || [];
 
   await invoiceService.createInvoice({
     title: 'titulo',
