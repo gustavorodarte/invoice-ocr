@@ -264,7 +264,6 @@ dist
 # envs
 .docker.env
 
-*.js
 !jest.config.js
 *.d.ts
 node_modules

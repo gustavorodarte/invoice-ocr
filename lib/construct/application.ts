@@ -7,9 +7,8 @@ import { Construct } from "constructs";
 import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaIntegration, MethodLoggingLevel, RestApi } from "aws-cdk-lib/aws-apigateway"
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
-import { LogGroup } from "aws-cdk-lib/aws-logs";
-
-
+import { LayerVersion } from "aws-cdk-lib/aws-lambda";
+z
 interface ApplicationProps {
     vpc: ec2.IVpc;
     database: DatabaseConnectionProps;
@@ -28,6 +27,53 @@ export class Application extends Construct {
             vpc: props.vpc,
         });
 
+         const prismaLayer = new LayerVersion(this, 'PrismaLayer', {
+            compatibleRuntimes: [Runtime.NODEJS_20_X],
+            description: 'Prisma Layer',
+            code: Code.fromAsset('backend/dist/layers/prisma', {
+              bundling: {
+                image: Runtime.NODEJS_20_X.bundlingImage,
+                command: [
+                  'bash',
+                  '-c',
+                  [
+                    'cp package.json package-lock.json api.js client.js /asset-output',
+                    'cp -r prisma /asset-output/prisma',
+                    'cp -r node_modules /asset-output/node_modules',
+                    'rm -rf /asset-output/node_modules/.cache',
+                    'rm -rf /asset-output/node_modules/@prisma/engines/node_modules',,
+                    'npx prisma generate',
+                  ].join(' && '),
+                ],
+              },
+            }),
+            layerVersionName: `prisma-layer`,
+          });
+    
+          const invoceLayer = new LayerVersion(this, 'InvoiceLayer', {
+            compatibleRuntimes: [Runtime.NODEJS_20_X],
+            description: 'Invoice Layer',
+            code: Code.fromAsset('backend/dist/layers/invoice', {
+              bundling: {
+                image: Runtime.NODEJS_20_X.bundlingImage,
+                command: [
+                  'bash',
+                  '-c',
+                  [
+                    'cp package.json package-lock.json api.js client.js /asset-output',
+                    'cp -r prisma /asset-output/prisma',
+                    'cp -r node_modules /asset-output/node_modules',
+                    'rm -rf /asset-output/node_modules/.cache',
+                    'rm -rf /asset-output/node_modules/@prisma/engines/node_modules',,
+                    'npx prisma generate',
+                  ].join(' && '),
+                ],
+              },
+            }),
+            layerVersionName: `invoice-layer`,
+          });
+
+
         const ocrLambdaFunction = new PrismaFunction(this, "InvoiceOcr", {
             code: Code.fromAsset("backend/dist/lambdas/invoice-ocr"),
             memorySize: 256,
@@ -37,6 +83,7 @@ export class Application extends Construct {
             securityGroups: [securityGroup],
             database,
             handler: "main.handler",
+            layers: [prismaLayer, invoceLayer],
         });
 
         const getInvoceLambdaFunction = new PrismaFunction(this, "GetInvoices", {
@@ -48,17 +95,18 @@ export class Application extends Construct {
             securityGroups: [securityGroup],
             database,
             handler: "main.handler",
+            layers: [prismaLayer, invoceLayer],
         });
 
         const migrationRunner = new PrismaFunction(this, "MigrationRunner", {
-            code: Code.fromAsset("backend/dist/lambdas/migration"),
+            code: Code.fromAsset("lib/lambda"),
             memorySize: 256,
             runtime: Runtime.NODEJS_20_X,
             timeout: cdk.Duration.seconds(15),
             vpc,
             securityGroups: [securityGroup],
             database,
-            handler: "main.handler",
+            handler: "migration.handler",
         });
 
         const bucket = new s3.Bucket(this, 'invoice-ocr', {

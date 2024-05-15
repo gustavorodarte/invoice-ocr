@@ -32,11 +32,11 @@ export class InvoiceOcrCdkStack extends cdk.Stack {
 
     database.allowInboundAccess(application.lambdaSecurityGroup);
 
-    const trigger = new Trigger(this, "MigrationTrigger", {
-      handler: application.migrationHandler,
-    });
-    // make sure migration is executed after the database cluster is available.
-    trigger.node.addDependency(database.cluster);
+    // const trigger = new Trigger(this, "MigrationTrigger", {
+    //   handler: application.migrationHandler,
+    // });
+    // // make sure migration is executed after the database cluster is available.
+    // trigger.node.addDependency(database.cluster);
   }
 }
 
