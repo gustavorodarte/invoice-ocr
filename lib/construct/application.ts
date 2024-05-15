@@ -8,7 +8,7 @@ import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LambdaIntegration, MethodLoggingLevel, RestApi } from "aws-cdk-lib/aws-apigateway"
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
-z
+
 interface ApplicationProps {
     vpc: ec2.IVpc;
     database: DatabaseConnectionProps;
@@ -30,46 +30,14 @@ export class Application extends Construct {
          const prismaLayer = new LayerVersion(this, 'PrismaLayer', {
             compatibleRuntimes: [Runtime.NODEJS_20_X],
             description: 'Prisma Layer',
-            code: Code.fromAsset('backend/dist/layers/prisma', {
-              bundling: {
-                image: Runtime.NODEJS_20_X.bundlingImage,
-                command: [
-                  'bash',
-                  '-c',
-                  [
-                    'cp package.json package-lock.json api.js client.js /asset-output',
-                    'cp -r prisma /asset-output/prisma',
-                    'cp -r node_modules /asset-output/node_modules',
-                    'rm -rf /asset-output/node_modules/.cache',
-                    'rm -rf /asset-output/node_modules/@prisma/engines/node_modules',,
-                    'npx prisma generate',
-                  ].join(' && '),
-                ],
-              },
-            }),
+            code: Code.fromAsset('backend/dist/layers/prisma'),
             layerVersionName: `prisma-layer`,
           });
     
           const invoceLayer = new LayerVersion(this, 'InvoiceLayer', {
             compatibleRuntimes: [Runtime.NODEJS_20_X],
             description: 'Invoice Layer',
-            code: Code.fromAsset('backend/dist/layers/invoice', {
-              bundling: {
-                image: Runtime.NODEJS_20_X.bundlingImage,
-                command: [
-                  'bash',
-                  '-c',
-                  [
-                    'cp package.json package-lock.json api.js client.js /asset-output',
-                    'cp -r prisma /asset-output/prisma',
-                    'cp -r node_modules /asset-output/node_modules',
-                    'rm -rf /asset-output/node_modules/.cache',
-                    'rm -rf /asset-output/node_modules/@prisma/engines/node_modules',,
-                    'npx prisma generate',
-                  ].join(' && '),
-                ],
-              },
-            }),
+            code: Code.fromAsset('backend/dist/layers/invoice'),
             layerVersionName: `invoice-layer`,
           });
 
